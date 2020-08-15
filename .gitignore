@@ -3,3 +3,4 @@
 .env
 go.sum
 TODO.md
+dist/
