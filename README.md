@@ -9,7 +9,7 @@ options:
 `help`/`h` : show usage  
 `port`/`p` + port : set server port
 
-default port is 8080
+default port is 2579
 
 ## Build
 

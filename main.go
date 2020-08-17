@@ -29,12 +29,12 @@ func getLocalIPv4() (string, error) {
 	return "", errors.New("can't get local ipv4 ip")
 }
 
-const usage = `ACCEPT OPTIONS:
+const usage = `ACCEPTED OPTIONS:
 h/help : show this usage
-p/port [port number] : set server port, default 8080`
+p/port [port number] : set server port, default 2579`
 
 func main() {
-	port := "8080"
+	port := "2579"
 
 	if len(os.Args) > 1 {
 		op := os.Args[1]
