@@ -5,9 +5,45 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
+
+	gcmd "github.com/HellseggaMosken/go-cmd"
 )
+
+func main() {
+	cmd := gcmd.New("sfs", "Start a simple file server.").
+		Flag(gcmd.FlagTypeValue,
+			"p", "port",
+			"Set the server port, default is 2579").
+		Service(func(ctx *gcmd.Context) error {
+			p := "2579"
+			if v, ok := ctx.Long("port"); ok {
+				p = v.(string)
+			}
+			if _, err := strconv.Atoi(p); err != nil {
+				return fmt.Errorf("port should be a number, but got '%v'", p)
+			}
+			return startServer(ctx.Working(), p)
+		})
+
+	err := cmd.RunWithArgs()
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func startServer(dir string, port string) error {
+	fmt.Println("serving \"" + dir + "\" at:")
+	fmt.Println("http://localhost:" + port)
+	if ipv4, err := getLocalIPv4(); err == nil {
+		fmt.Println("http://" + ipv4 + ":" + port)
+	} else {
+		fmt.Println(err)
+	}
+
+	http.Handle("/", http.FileServer(http.Dir(dir)))
+	return http.ListenAndServe(":"+port, nil)
+}
 
 func getLocalIPv4() (string, error) {
 	addrs, err := net.InterfaceAddrs()
@@ -27,50 +63,4 @@ func getLocalIPv4() (string, error) {
 	}
 
 	return "", errors.New("can't get local ipv4 ip")
-}
-
-const usage = `ACCEPTED OPTIONS:
-h/help : show this usage
-p/port [port number] : set server port, default 2579`
-
-func main() {
-	port := "2579"
-
-	if len(os.Args) > 1 {
-		op := os.Args[1]
-		if op == "help" || op == "h" {
-			fmt.Println(usage)
-			return
-		} else if op == "port" || op == "p" {
-			if len(os.Args) > 2 {
-				if _, err := strconv.Atoi(os.Args[2]); err == nil {
-					port = os.Args[2]
-				} else {
-					fmt.Println("port should be a number, but got \"" + os.Args[2] + "\"")
-					return
-				}
-			}
-		} else {
-			fmt.Println("unknown option: " + op + ", use option \"help\" for help")
-			return
-		}
-	}
-
-	dir, err := os.Getwd()
-	if err != nil {
-		panic("can't get the current working dir's path")
-	}
-
-	fmt.Println("serving \"" + dir + "\" at:")
-	fmt.Println("http://localhost:" + port)
-	if ipv4, err := getLocalIPv4(); err == nil {
-		fmt.Println("http://" + ipv4 + ":" + port)
-	} else {
-		fmt.Println(err)
-	}
-
-	http.Handle("/", http.FileServer(http.Dir(dir)))
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		panic(err)
-	}
 }
